@@ -10,12 +10,12 @@ import borrowRouter from "./routes/borrow.route.js";
 const app = express();
 connectToDb();
 app.use(
-  cors({
-    // origin: process.env.CORS_ORIGIN || "*",
-    // origin: "https://prashika-mel-frontend.vercel.app",
-    origin: "http://localhost:5173",
-    credentials: true,
-  })
+    cors({
+        // origin: process.env.CORS_ORIGIN || "*",
+        // origin: "https://prashika-mel-frontend.vercel.app",
+        origin: "http://localhost:5173",
+        credentials: true,
+    })
 );
 
 app.use(cookieParser());
@@ -29,5 +29,5 @@ app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/borrow", borrowRouter);
 
 app.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
+    console.log(`Server running on ${PORT}`);
 });
