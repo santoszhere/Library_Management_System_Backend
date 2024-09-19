@@ -7,16 +7,22 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 const changeUserRoles = asyncHandler(async (req, res) => {
   const { role } = req.body;
   const { userId } = req.params;
+
+  if (!["member", "librarian"].includes(role)) {
+    throw new ApiError(400, "Invalid role provided");
+  }
+
   const user = await User.findById(userId);
   if (!user) throw new ApiError(404, "User not found");
 
-  if (role === "member") {
-    user.role = "librarian";
-  } else if (role === "librarian") {
-    user.role = "member";
-  }
+  user.role = role;
+
   const updatedUser = await user.save();
-  res.status(200).json(new ApiResponse(200, updatedUser, "User updated "));
+  if (!updatedUser) throw new ApiError(400, "Failed to update user role");
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, updatedUser, "User role updated successfully"));
 });
 
 const getAllUsers = asyncHandler(async (req, res) => {
