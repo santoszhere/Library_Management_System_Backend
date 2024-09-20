@@ -24,9 +24,9 @@ bookRouter.route("/get-all-books").get(getAllBooks);
 bookRouter.route("/get-single-book/:bookId").get(getSingleBook);
 bookRouter
   .route("/update-book/:bookId")
-  .patch(authorizeRoles("librarian", "admin"), updateBookDetail);
+  .patch(verifyJwt, authorizeRoles("librarian", "admin"), updateBookDetail);
 bookRouter
   .route("/delete-book/:bookId")
-  .delete(authorizeRoles("librarian", "admin"), deleteBook);
+  .delete(verifyJwt, authorizeRoles("librarian", "admin"), deleteBook);
 
 export default bookRouter;

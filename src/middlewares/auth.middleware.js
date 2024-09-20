@@ -13,7 +13,7 @@ export const verifyJwt = asyncHandler(async (req, res, next) => {
     const user = await User.findById(decodedToken?._id).select(
       "-password -refreshToken"
     );
-    if (!user) throw new ApiError(401, "Unauthorized user");
+    if (!user) throw new ApiError(401, "Unauthorized user ");
     req.user = user;
     next();
   } catch (error) {
@@ -26,9 +26,6 @@ export const authorizeRoles = (...roles) => {
     try {
       const user = req?.user; // Ensure user is present in the request (from authentication middleware)
       if (!user) throw new ApiError(401, "Unauthorized user");
-      console.log(roles);
-      console.log(user.role);
-      console.log(roles.includes(user.role));
       if (!roles.includes(user?.role)) {
         throw new ApiError(
           403,
