@@ -140,7 +140,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req?.user._id)
     .populate({
       path: "borrowedBooks",
-      select: "-borrowedBy -_id ",
+      select: "-borrowedBy ",
     })
     .select(
       "-password -resetPasswordToken -resetPasswordExpires -refreshToken"
