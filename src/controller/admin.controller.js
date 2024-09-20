@@ -31,13 +31,26 @@ const getAllUsers = asyncHandler(async (req, res) => {
   const users = await User.find()
     .populate({
       path: "borrowedBooks",
-      select: "-password ",
+      select: "-password -borrowedBy",
     })
     .select(
       "-password -refreshToken -resetPasswordToken -resetPasswordExpires"
     );
   res.status(200).json(new ApiResponse(200, users, "User details"));
 });
+
+const getAllBooks = asyncHandler(async (req, res) => {
+  const users = await Book.find()
+    .populate({
+      path: "borrowedBy",
+      select: "-password -borrowedBy",
+    })
+    .select(
+      "-password -refreshToken -resetPasswordToken -resetPasswordExpires"
+    );
+  res.status(200).json(new ApiResponse(200, users, "User details"));
+});
+
 const deleteUser = asyncHandler(async (req, res) => {
   await User.findByIdAndDelete(req.params.userId);
   res.status(200).json(new ApiResponse(200, {}, "User deleted successfully"));
@@ -99,5 +112,6 @@ export {
   deleteUser,
   getStatistics,
   getAllUsers,
+  getAllBooks,
   checkDueDatesAndSendReminders,
 };

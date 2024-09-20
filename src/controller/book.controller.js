@@ -29,7 +29,7 @@ const addBook = asyncHandler(async (req, res) => {
     genre,
     publicationYear,
     isbn,
-    coverImage: bookImageAvatar.url,
+    coverImage: bookAvatar.url,
   });
 
   if (!book) throw new ApiError(400, "Failed to add a book");
