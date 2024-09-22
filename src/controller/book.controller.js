@@ -4,6 +4,8 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { Notification } from "../model/notification_.model.js";
+import { io } from "../index.js";
 
 const addBook = asyncHandler(async (req, res) => {
   const { title, author, genre, publicationYear, isbn } = req.body;
@@ -13,13 +15,14 @@ const addBook = asyncHandler(async (req, res) => {
       (field) => field?.trim() === ""
     )
   ) {
-    throw new ApiError(400, "All field required");
+    throw new ApiError(400, "All fields are required");
   }
 
   const bookImageAvatar = req.file?.path;
   if (!bookImageAvatar) {
     throw new ApiError(400, "Book avatar not found");
   }
+
   const bookAvatar = await uploadOnCloudinary(bookImageAvatar);
   if (!bookAvatar) throw new ApiError(400, "Failed to upload the image");
 
@@ -33,7 +36,20 @@ const addBook = asyncHandler(async (req, res) => {
   });
 
   if (!book) throw new ApiError(400, "Failed to add a book");
-  res.status(200).json(new ApiResponse(200, book, "Book Added successfully"));
+
+  const notificationMessage = `Author ${author.toLowerCase()} added a new book: '${title}'`;
+
+  const notification = new Notification({
+    message: notificationMessage,
+    bookId: book._id,
+  });
+  await notification.save();
+
+  io.emit("bookNotification", {
+    message: notificationMessage,
+  });
+
+  res.status(200).json(new ApiResponse(200, book, "Book added successfully"));
 });
 
 const getAllBooks = asyncHandler(async (req, res) => {
@@ -74,6 +90,18 @@ const updateBookDetail = asyncHandler(async (req, res) => {
 const deleteBook = asyncHandler(async (req, res) => {
   const book = await Book.findById(req.params.bookId);
   if (!book) throw new ApiError(404, "Book not found");
+  const notificationMessage = `The book "${book.title}" has been deleted.`;
+  const notification = new Notification({
+    message: notificationMessage,
+    bookId: book._id,
+  });
+
+  await notification.save();
+
+  io.emit("bookNotification", {
+    message: notificationMessage,
+  });
+
   await Book.findByIdAndDelete(req.params.bookId);
   res.status(200).json(new ApiResponse(200, {}, "Book deleted successfully"));
 });
