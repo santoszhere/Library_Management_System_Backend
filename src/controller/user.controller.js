@@ -96,9 +96,14 @@ const loginUser = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
     existedUser?._id
   );
-  const loggedInUser = await User.findById(existedUser._id).select(
-    "-password -accessToken -refreshToken -resetPasswordToken -resetPasswordExpires"
-  );
+  const loggedInUser = await User.findById(existedUser._id)
+    .populate({
+      path: "borrowedBooks",
+      select: "-borrowedBy ",
+    })
+    .select(
+      "-password -accessToken -refreshToken -resetPasswordToken -resetPasswordExpires"
+    );
 
   return res
     .status(200)

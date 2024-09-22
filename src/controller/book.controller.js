@@ -39,11 +39,11 @@ const addBook = asyncHandler(async (req, res) => {
 
   const notificationMessage = `Author ${author.toLowerCase()} added a new book: '${title}'`;
 
-  const notification = new Notification({
+  const notification = await Notification.create({
     message: notificationMessage,
     bookId: book._id,
+    seenBy: req.user._id,
   });
-  await notification.save();
 
   io.emit("bookNotification", {
     message: notificationMessage,

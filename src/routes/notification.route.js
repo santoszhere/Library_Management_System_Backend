@@ -1,9 +1,11 @@
 import { Router } from 'express';
-import { getUserNotifications, markNotificationAsSeen } from '../controller/notification.controller.js';
+import { getUserNotifications, markNotificationAsSeen, getAllNotification } from '../controller/notification.controller.js';
+import { verifyJwt } from '../middlewares/auth.middleware.js';
 
 const notificationRouter = Router();
-
-notificationRouter.post('/markAsSeen/:notificationId', markNotificationAsSeen);
+notificationRouter.use(verifyJwt)
+notificationRouter.route("/get-notification").get(getAllNotification)
+notificationRouter.post('/markAsSeen', markNotificationAsSeen);
 
 notificationRouter.get('/:userId', getUserNotifications);
 

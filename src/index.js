@@ -10,6 +10,7 @@ import adminRouter from "./routes/admin.route.js";
 import borrowRouter from "./routes/borrow.route.js";
 import scheduleReminders from "./utils/scheduleReminder.js";
 import notificationRouter from "./routes/notification.route.js";
+import searchRouter from "./routes/search.route.js";
 
 const app = express();
 connectToDb();
@@ -33,6 +34,8 @@ app.use("/api/v1/books", bookRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/borrow", borrowRouter);
 app.use("/api/v1/notification", notificationRouter);
+app.use("/api/v1/search", searchRouter);
+
 const server = app.listen(PORT, () => {
     console.log(`Server running on ${PORT}`);
 });

@@ -4,9 +4,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 
-export const markNotificationAsSeen = asyncHandler(async(req, res) => {
-    const { userId } = req.body;
-    const { notificationId } = req.params;
+const markNotificationAsSeen = asyncHandler(async(req, res) => {
+    const { notificationId } = req.body;
 
     const notification = await Notification.findById(notificationId);
     if (!notification) {
@@ -14,13 +13,13 @@ export const markNotificationAsSeen = asyncHandler(async(req, res) => {
     }
 
     await Notification.findByIdAndUpdate(notificationId, {
-        $addToSet: { seenBy: userId }
+        $addToSet: { seenBy: req.user._id }
     });
 
     res.status(200).json(new ApiResponse(200, {}, "Notification marked as seen"));
 });
 
-export const getUserNotifications = asyncHandler(async(req, res) => {
+const getUserNotifications = asyncHandler(async(req, res) => {
     const { userId } = req.params;
 
     const notifications = await Notification.find({
@@ -29,3 +28,13 @@ export const getUserNotifications = asyncHandler(async(req, res) => {
 
     res.status(200).json(new ApiResponse(200, notifications, "Notifications retrieved successfully"));
 });
+
+const getAllNotification = asyncHandler(async(req, res) => {
+    const notifications = await Notification.find().sort({ createdAt: -1 });
+    res.status(200).json(new ApiResponse(200, notifications, "All notifications"))
+})
+export {
+    markNotificationAsSeen,
+    getUserNotifications,
+    getAllNotification
+}
