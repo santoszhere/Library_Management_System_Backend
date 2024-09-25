@@ -4,6 +4,7 @@ import {
   changePassword,
   forgotPassword,
   getCurrentUser,
+  getOtherUser,
   loggedOutUser,
   loginUser,
   registerUser,
@@ -27,5 +28,6 @@ userRouter
   .route("/avatar-update")
   .patch(verifyJwt, upload.single("avatar"), updateUserAvatar);
 userRouter.route("/forgot-password").post(forgotPassword);
+userRouter.route("/get-other-user/:userId").get(getOtherUser);
 userRouter.route("/reset-password/:resetToken").post(resetPassword);
 export default userRouter;

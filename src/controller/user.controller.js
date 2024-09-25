@@ -265,6 +265,15 @@ const resetPassword = asyncHandler(async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+const getOtherUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const user = await User.findById(userId)
+    .populate("borrowedBooks")
+    .select("-password -refreshToken");
+  if (!user) throw new ApiError(404, "User not found");
+  res.status(200).json(new ApiResponse(200, user, "User details"));
+});
 export {
   registerUser,
   loginUser,
@@ -276,4 +285,5 @@ export {
   resetPassword,
   forgotPassword,
   registerAdmin,
+  getOtherUser,
 };
