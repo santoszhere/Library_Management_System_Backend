@@ -155,31 +155,41 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 });
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const { username, oldPassword, newPassword } = req.body;
-
   const user = await User.findById(req?.user?._id);
-  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
-  if (!isPasswordCorrect) throw new ApiError(400, "Password not matched");
-  // user.password = newPassword;
-  // await user.save({ validateBeforeSave: false });
+  let updates = {};
 
-  const updatedUser = await User.findByIdAndUpdate(
-    req.user?._id,
-    {
-      $set: {
-        username,
-        password: newPassword,
-      },
-    },
-    {
-      new: true,
-    }
-  ).select("-password -refreshToken");
+  if (username) {
+    updates.username = username;
+  }
 
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(200, updatedUser, "Account details updated successfully")
-    );
+  if (newPassword) {
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+    if (!isPasswordCorrect) throw new ApiError(400, "Password not matched");
+
+    updates.password = newPassword;
+  }
+
+  if (Object.keys(updates).length > 0) {
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user?._id,
+      { $set: updates },
+      { new: true }
+    ).select("-password -refreshToken");
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          updatedUser,
+          "Account details updated successfully"
+        )
+      );
+  } else {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, null, "No updates provided"));
+  }
 });
 
 const updateUserAvatar = asyncHandler(async (req, res) => {

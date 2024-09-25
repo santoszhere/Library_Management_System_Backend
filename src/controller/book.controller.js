@@ -78,7 +78,7 @@ const updateBookDetail = asyncHandler(async (req, res) => {
   const updateBook = await Book.findByIdAndUpdate(
     bookId,
     { $set: { title, author, genre, publicationYear } },
-    { new: true, runValidators: true }
+    { new: true }
   );
 
   if (!updateBook) throw new ApiError(400, "Failed to update the book");
