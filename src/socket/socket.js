@@ -8,7 +8,6 @@ import { Notification } from "../model/notification_.model.js";
 const verifySocketToken = async (socket) => {
   const cookies = cookie.parse(socket.handshake.headers?.cookie || "");
   let token = cookies?.accessToken || socket.handshake.auth?.token;
-
   if (!token)
     throw new ApiError(401, "Unauthorized handshake. Token is missing");
 
@@ -19,7 +18,6 @@ const verifySocketToken = async (socket) => {
 
   if (!user)
     throw new ApiError(401, "Unauthorized handshake. Token is invalid");
-
   return user;
 };
 
@@ -84,6 +82,7 @@ const initializeSocketIO = (io) => {
 };
 
 const emitSocketEvent = (req, roomId, event, payload) => {
+  console.log(event, req.user?.username);
   req.app.get("io").to(roomId).emit(event, payload);
 };
 

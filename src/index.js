@@ -56,15 +56,3 @@ export const io = new Server(server, {
 
 app.set("io", io);
 initializeSocketIO(io);
-
-io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
-
-  socket.on("sendNotification", (data) => {
-    io.emit("bookNotification", data);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-  });
-});
