@@ -2,6 +2,7 @@ import express, { urlencoded } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { Server } from "socket.io"; // Import Socket.IO
+import { createServer } from "http";
 import { PORT } from "./config/constants.js";
 import connectToDb from "./db/connect.js";
 import userRouter from "./routes/user.route.js";
@@ -43,11 +44,10 @@ app.use("/api/v1/search", searchRouter);
 app.use("/api/v1/chats", chatRouter);
 app.use("/api/v1/chat/messages", chatMessageRouter);
 
-const server = app.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
-});
+const httpServer = createServer(app);
 
-export const io = new Server(server, {
+const io = new Server(httpServer, {
+  pingTimeout: 60000,
   cors: {
     origin: "http://localhost:5173",
     credentials: true,
@@ -56,3 +56,7 @@ export const io = new Server(server, {
 
 app.set("io", io);
 initializeSocketIO(io);
+
+httpServer.listen(PORT, () => {
+  console.log(`Server running on ${PORT}`);
+});

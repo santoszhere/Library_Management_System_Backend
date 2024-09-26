@@ -5,7 +5,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { Notification } from "../model/notification_.model.js";
-import { io } from "../index.js";
+import { emitSocketEvent } from "../socket/socket.js";
+import { ChatEventEnum } from "../config/constants.js";
 
 const addBook = asyncHandler(async (req, res) => {
   const { title, author, genre, publicationYear, isbn } = req.body;
@@ -39,11 +40,12 @@ const addBook = asyncHandler(async (req, res) => {
 
   const notificationMessage = `Author ${author.toLowerCase()} added a new book: '${title}'`;
 
-  const notification = await Notification.create({
+  await Notification.create({
     message: notificationMessage,
     bookId: book._id,
     seenBy: req.user._id,
   });
+  emitSocketEvent(req, book._id, ChatEventEnum.BOOK_NOTIFICATION_EVENT, book);
 
   io.emit("bookNotification", {
     message: notificationMessage,

@@ -29,10 +29,12 @@ const mountSocketEvents = (socket, io) => {
 
   socket.on(ChatEventEnum.TYPING_EVENT, (chatId) => {
     socket.to(chatId).emit(ChatEventEnum.TYPING_EVENT, chatId);
+    console.log("User typing", chatId);
   });
 
   socket.on(ChatEventEnum.STOP_TYPING_EVENT, (chatId) => {
     socket.to(chatId).emit(ChatEventEnum.STOP_TYPING_EVENT, chatId);
+    console.log("User stop typing", chatId);
   });
 
   socket.on(ChatEventEnum.SEND_NOTIFICATION_EVENT, async (notificationData) => {
@@ -48,6 +50,10 @@ const mountSocketEvents = (socket, io) => {
       console.log(`Notification sent to ${recipientId}:`, notification);
     } catch (error) {
       console.error("Error saving notification:", error);
+      socket.emit(
+        ChatEventEnum.SOCKET_ERROR_EVENT,
+        "Failed to send notification."
+      );
     }
   });
 
