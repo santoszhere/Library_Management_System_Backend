@@ -15,6 +15,8 @@ import searchRouter from "./routes/search.route.js";
 import { initializeSocketIO } from "./socket/socket.js";
 import chatRouter from "./routes/chat.route.js";
 import chatMessageRouter from "./routes/chatmessage.route.js";
+import recommendRouter from "./routes/recommended.route.js";
+import reviewRouter from "./routes/review.route.js";
 
 const app = express();
 connectToDb();
@@ -39,7 +41,8 @@ app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/borrow", borrowRouter);
 app.use("/api/v1/notification", notificationRouter);
 app.use("/api/v1/search", searchRouter);
-
+app.use("/api/v1/review", reviewRouter);
+app.use("/api/v1/recommendation", recommendRouter);
 // chat Router
 app.use("/api/v1/chats", chatRouter);
 app.use("/api/v1/chat/messages", chatMessageRouter);

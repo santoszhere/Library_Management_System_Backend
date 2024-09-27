@@ -9,10 +9,10 @@ import { emitSocketEvent } from "../socket/socket.js";
 import { ChatEventEnum } from "../config/constants.js";
 
 const addBook = asyncHandler(async (req, res) => {
-  const { title, author, genre, publicationYear, isbn } = req.body;
+  const { title, author, genre, publicationYear, isbn, description } = req.body;
 
   if (
-    [title, author, genre, publicationYear, isbn].some(
+    [title, author, genre, publicationYear, isbn, description].some(
       (field) => field?.trim() === ""
     )
   ) {
@@ -33,6 +33,7 @@ const addBook = asyncHandler(async (req, res) => {
     genre,
     publicationYear,
     isbn,
+    description,
     coverImage: bookAvatar.url,
   });
 
