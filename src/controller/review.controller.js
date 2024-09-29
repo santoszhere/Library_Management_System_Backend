@@ -59,28 +59,50 @@ const populateNestedReplies = async(review) => {
 };
 const getReviewsForBook = asyncHandler(async(req, res) => {
     const { bookId } = req.params;
+    const { page = 1, limit = 6 } = req.query;
+    try {
+        const totalCount = await Review.countDocuments({ bookId, parentReviewId: null });
 
-    let reviews = await Review.find({ bookId, parentReviewId: null })
-        .populate({
-            path: "userId",
-            select: "username avatar"
-        })
-        .lean();
+        if (totalCount === 0) {
+            return res
+                .status(200)
+                .json(new ApiResponse(200, [], "No reviews found for this book"));
+        }
 
-    reviews = await Promise.all(
-        reviews.map((review) => populateNestedReplies(review))
-    );
+        const totalPages = Math.ceil(totalCount / limit);
+        const skip = (page - 1) * limit;
 
-    if (!reviews.length) {
+        let reviews = await Review.find({ bookId, parentReviewId: null })
+            .populate({
+                path: "userId",
+                select: "username avatar"
+            })
+            .lean()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+
+        reviews = await Promise.all(
+            reviews.map((review) => populateNestedReplies(review))
+        );
+
+        res.status(200).json(
+            new ApiResponse(200, {
+                reviews,
+                totalCount,
+                totalPages,
+                currentPage: page,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            }, "Reviews fetched successfully")
+        );
+    } catch (error) {
         return res
-            .status(200)
-            .json(new ApiResponse(200, [], "No reviews found for this book"));
+            .status(500)
+            .json(new ApiError(500, "Error fetching reviews", error));
     }
-
-    res
-        .status(200)
-        .json(new ApiResponse(200, reviews, "Reviews fetched successfully"));
 });
+
 const editReview = asyncHandler(async(req, res) => {
     const { content, reviewId } = req.body;
 

@@ -41,22 +41,22 @@ const addBook = asyncHandler(async (req, res) => {
 
   const notificationMessage = `Author ${author.toLowerCase()} added a new book: '${title}'`;
 
-  await Notification.create({
-    message: notificationMessage,
-    bookId: book._id,
-    seenBy: req.user._id,
-  });
-  emitSocketEvent(req, book._id, ChatEventEnum.BOOK_NOTIFICATION_EVENT, book);
+  // await Notification.create({
+  //   message: notificationMessage,
+  //   bookId: book._id,
+  //   seenBy: req.user._id,
+  // });
+  // emitSocketEvent(req, book._id, ChatEventEnum.BOOK_NOTIFICATION_EVENT, book);
 
-  io.emit("bookNotification", {
-    message: notificationMessage,
-  });
+  // io.emit("bookNotification", {
+  //   message: notificationMessage,
+  // });
 
   res.status(200).json(new ApiResponse(200, book, "Book added successfully"));
 });
 
 const getAllBooks = asyncHandler(async (req, res) => {
-  const book = await Book.find().populate("borrowedBy");
+  const book = await Book.find().populate("borrowedBy").sort({ createdAt: -1 });
   if (!book) throw new ApiError(404, "Books not found");
   res.status(200).json(new ApiResponse(200, book, "Book details"));
 });
@@ -93,17 +93,17 @@ const updateBookDetail = asyncHandler(async (req, res) => {
 const deleteBook = asyncHandler(async (req, res) => {
   const book = await Book.findById(req.params.bookId);
   if (!book) throw new ApiError(404, "Book not found");
-  const notificationMessage = `The book "${book.title}" has been deleted.`;
-  const notification = new Notification({
-    message: notificationMessage,
-    bookId: book._id,
-  });
+  // const notificationMessage = `The book "${book.title}" has been deleted.`;
+  // const notification = new Notification({
+  //   message: notificationMessage,
+  //   bookId: book._id,
+  // });
 
-  await notification.save();
+  // await notification.save();
 
-  io.emit("bookNotification", {
-    message: notificationMessage,
-  });
+  // io.emit("bookNotification", {
+  //   message: notificationMessage,
+  // });
 
   await Book.findByIdAndDelete(req.params.bookId);
   res.status(200).json(new ApiResponse(200, {}, "Book deleted successfully"));
