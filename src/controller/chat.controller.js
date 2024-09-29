@@ -255,7 +255,7 @@ const getGroupChatDetails = asyncHandler(async (req, res) => {
   const chat = groupChat[0];
 
   if (!chat) {
-    throw new ApiError(404, "Group chat does not exist");
+    res.status(200).json(new ApiResponse(200, [], "Group chat does not exist"));
   }
 
   return res
@@ -433,7 +433,7 @@ const leaveGroupChat = asyncHandler(async (req, res) => {
     chatId,
     {
       $pull: {
-        participants: req.user?._id, // leave the group
+        participants: req.user?._id,
       },
     },
     { new: true }
