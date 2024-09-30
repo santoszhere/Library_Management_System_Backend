@@ -114,35 +114,58 @@ const getReviewsForBook = asyncHandler(async (req, res) => {
       .json(new ApiError(500, "Error fetching reviews", error));
   }
 });
-
 const getNestedReplies = asyncHandler(async (req, res) => {
   const { reviewId } = req.params;
 
   try {
-    const review = await Review.findById(reviewId)
-      .populate({
-        path: "replies",
-        options: { limit: 3 },
-        populate: {
-          path: "userId",
-          select: "username avatar",
-        },
-      })
-      .lean();
+    const review = await Review.findById(reviewId).lean();
 
     if (!review) {
       return res.status(404).json(new ApiError(404, "Review not found"));
     }
 
-    res
-      .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          review.replies || [],
-          "Nested replies fetched successfully"
-        )
-      );
+    const replies = await Review.aggregate([
+      {
+        $match: {
+          parentReviewId: new mongoose.Types.ObjectId(reviewId),
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          content: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          userId: {
+            username: "$user.username",
+            avatar: "$user.avatar",
+            _id: "$user._id",
+          },
+          hasReplies: {
+            $gt: [{ $size: { $ifNull: ["$replies", []] } }, 0],
+          },
+        },
+      },
+    ]);
+
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          replies,
+        },
+        "Nested replies fetched successfully"
+      )
+    );
   } catch (error) {
     return res
       .status(500)
