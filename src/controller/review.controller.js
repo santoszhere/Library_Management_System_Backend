@@ -11,30 +11,26 @@ const postReview = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Book ID, user ID, and content are required");
   }
 
-  try {
-    const reviewData = { bookId, userId: req.user._id, content };
+  const reviewData = { bookId, userId: req.user._id, content };
+  if (parentReviewId) {
+    reviewData.parentReviewId = parentReviewId;
+  }
+
+  const review = await Review.create(reviewData);
+
+  if (review) {
     if (parentReviewId) {
-      reviewData.parentReviewId = parentReviewId;
-    }
-
-    const review = await Review.create(reviewData);
-
-    if (review) {
-      if (parentReviewId) {
-        const parentReview = await Review.findById(parentReviewId);
-        if (!parentReview) {
-          throw new ApiError(404, "Parent review not found");
-        }
-        parentReview.replies.push(review._id);
-        await parentReview.save();
+      const parentReview = await Review.findById(parentReviewId);
+      if (!parentReview) {
+        throw new ApiError(404, "Parent review not found");
       }
-
-      res
-        .status(200)
-        .json(new ApiResponse(200, review, "Review added successfully"));
+      parentReview.replies.push(review._id);
+      await parentReview.save();
     }
-  } catch (error) {
-    throw new ApiError(500, "Error creating review");
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, review, "Review added successfully"));
   }
 });
 
@@ -74,6 +70,15 @@ const getReviewsForBook = asyncHandler(async (req, res) => {
       },
       { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
       {
+        $graphLookup: {
+          from: "reviews",
+          startWith: "$_id",
+          connectFromField: "_id",
+          connectToField: "parentReviewId",
+          as: "allReplies",
+        },
+      },
+      {
         $project: {
           _id: 1,
           content: 1,
@@ -87,6 +92,7 @@ const getReviewsForBook = asyncHandler(async (req, res) => {
           hasReplies: {
             $gt: [{ $size: { $ifNull: ["$replies", []] } }, 0],
           },
+          replyCount: { $size: { $ifNull: ["$allReplies", []] } },
         },
       },
       { $sort: { createdAt: -1 } },
@@ -94,12 +100,32 @@ const getReviewsForBook = asyncHandler(async (req, res) => {
       { $limit: parseInt(limit) },
     ]);
 
+    const totalReviews = await Review.aggregate([
+      {
+        $lookup: {
+          from: "reviews",
+          localField: "_id",
+          foreignField: "parentReviewId",
+          as: "replies",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: {
+            $sum: {
+              $add: [1, { $size: "$replies" }],
+            },
+          },
+        },
+      },
+    ]);
     res.status(200).json(
       new ApiResponse(
         200,
         {
           reviews,
-          totalCount,
+          totalCount: totalReviews.length ? totalReviews[0].total : 0,
           totalPages,
           currentPage: page,
           hasNextPage: page < totalPages,
@@ -140,6 +166,15 @@ const getNestedReplies = asyncHandler(async (req, res) => {
       },
       { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
       {
+        $graphLookup: {
+          from: "reviews",
+          startWith: "$_id",
+          connectFromField: "_id",
+          connectToField: "parentReviewId",
+          as: "allReplies",
+        },
+      },
+      {
         $project: {
           _id: 1,
           content: 1,
@@ -153,6 +188,7 @@ const getNestedReplies = asyncHandler(async (req, res) => {
           hasReplies: {
             $gt: [{ $size: { $ifNull: ["$replies", []] } }, 0],
           },
+          replyCount: { $size: { $ifNull: ["$allReplies", []] } },
         },
       },
     ]);
